@@ -1,0 +1,59 @@
+image: gradle:5.6-jdk12
+
+stages:
+  - build
+  - validate
+  - test
+
+variables:
+  # Disable the Gradle daemon to ensure isolated runs of the CI pipeline.
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - export ANDROID_HOME=/usr/lib/android-sdk
+build:
+  stage: build
+  script:
+    - gradle assemble
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - build/
+      - .gradle/
+
+checkStyle:
+  stage: validate
+  script: gradle checkstyleMain checkstyleTest
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - build/
+      - .gradle/
+
+spotBugs:
+  stage: validate
+  script: gradle spotbugsMain spotbugsTest
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - build/
+      - .gradle/
+
+PMD:
+  stage: validate
+  script: gradle pmdMain pmdTest
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - build/
+      - .gradle/
+
+test:
+  stage: test
+  script:
+    gradle --info check

@@ -1,0 +1,86 @@
+import com.github.spotbugs.SpotBugsTask
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java'
+
+    // Test coverage
+    id 'jacoco'
+
+    // Code style
+    id 'checkstyle'
+
+    // PMD
+    id 'pmd'
+
+    // FindBugs / SpotBugs
+    id "com.github.spotbugs"
+}
+
+checkstyle {
+    toolVersion "8.25"
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+}
+
+pmd {
+    incrementalAnalysis = true
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.5
+            }
+        }
+    }
+}
+check.dependsOn jacocoTestCoverageVerification
+
+spotbugs {
+    sourceSets = [sourceSets.main]
+    ignoreFailures = false
+    effort = "default"
+    reportLevel = "high"
+    visitors = ["FindSqlInjection", "SwitchFallthrough"]
+    excludeFilter = file("$rootProject.projectDir/config/spotbugs/excludeFilter.xml")
+}
+
+tasks.withType(SpotBugsTask) {
+    reports.xml.enabled = false
+    reports.html.enabled = true
+}
+
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    compile group: 'com.badlogicgames.gdx', name: 'gdx-freetype', version: '1.9.10'
+    compile group: 'org.json', name: 'json', version: '20190722'
+
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+    testCompile group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.4'
+    testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.4'
+    testCompile group: 'org.powermock', name: 'powermock-api-mockito', version: '1.7.4'
+
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.5.2')
+    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.5.2')
+    implementation('org.junit.jupiter:junit-jupiter-api:5.5.2')
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.5.2')
+    testImplementation('org.mockito:mockito-junit-jupiter:3.1.0')
+    testImplementation('org.mockito:mockito-core:3.1.0')
+    implementation('org.mockito:mockito-junit-jupiter:3.1.0')
+    implementation('org.mockito:mockito-core:3.1.0')
+}
+
+sourceCompatibility = 11
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = [ "src/main/java" ,]
